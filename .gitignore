@@ -1,0 +1,14 @@
+testdata
+test
+*.toml
+*.json
+*.yml
+*.yaml
+*.tmpl
+grafanaApi
+.vscode
+log
+vendor
+*tar.gz
+*tar
+.DS_Store
