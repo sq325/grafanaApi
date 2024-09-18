@@ -1,6 +1,9 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+	alertcmd "github.com/sq325/grafanaApi/cmd/alert"
+)
 
 var AlertCmd = &cobra.Command{
 	Use:   "alert",
@@ -13,4 +16,6 @@ var AlertCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(AlertCmd)
+	AlertCmd.AddCommand(alertcmd.GetCmd)
+
 }

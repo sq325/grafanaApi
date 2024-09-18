@@ -11,7 +11,7 @@ var (
 	httpClient *http.Client
 )
 
-func NewClient() *http.Client {
+func New() *http.Client {
 	once.Do(
 		func() {
 			httpClient = &http.Client{

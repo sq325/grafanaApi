@@ -13,9 +13,9 @@ type API interface {
 
 const (
 	// GET RESPONSE.BODY:Datasources
-	ApiAllDatasources = "/api/datasources"
+	apiAllDatasources = "/api/datasources"
 	// GET RESPONSE.BODY:Datasource
-	ApiDatasource = "/api/datasources/uid/{uid}"
+	apiDatasource = "/api/datasources/uid/{uid}"
 )
 
 type api struct {
