@@ -1,9 +1,11 @@
 package datasource
 
 import (
+	"net/http"
 	"net/url"
 
 	"github.com/sq325/grafanaApi/pkg/common"
+	"github.com/sq325/grafanaApi/pkg/httpclient"
 )
 
 type API interface {
@@ -19,8 +21,9 @@ const (
 )
 
 type api struct {
-	u     *url.URL
-	token string
+	u      *url.URL
+	token  string
+	client *http.Client
 }
 
 func NewApi(ep, token string) API {
@@ -29,14 +32,26 @@ func NewApi(ep, token string) API {
 	}
 
 	return &api{
-		u:     u,
-		token: token,
+		u:      u,
+		token:  token,
+		client: httpclient.New(),
 	}
 }
 
 var _ API = (*api)(nil)
 
 func (a *api) GetAll() *DataSources {
+	req, err := common.Request(http.MethodGet, a.u, apiAllDatasources, a.token, "", "", nil, nil)
+	if err != nil {
+	}
+
+	resp, err := a.client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		// TODO
+	}
+
+	// TODO
+
 	return nil
 }
 

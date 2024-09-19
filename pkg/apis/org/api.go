@@ -1,7 +1,6 @@
 package org
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -21,6 +20,7 @@ const (
 type API interface {
 	GetAll() Orgs
 	GetCurrent() Org
+	Create(name string) error
 }
 
 type api struct {
@@ -53,12 +53,9 @@ func (a *api) GetAll() Orgs {
 		return nil
 	}
 
-	req, err := http.NewRequest(http.MethodGet, a.u.JoinPath(allOrgs).String(), nil)
+	req, err := common.Request(http.MethodGet, a.u, allOrgs, "", a.user, a.passwd, nil, nil)
 	if err != nil {
 	}
-	auth := a.user + ":" + a.passwd
-	encodedAuth := base64.StdEncoding.EncodeToString([]byte(auth))
-	req.Header.Add("Authorization", "Basic "+encodedAuth)
 
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -82,10 +79,9 @@ func (a *api) GetAll() Orgs {
 }
 
 func (a *api) GetCurrent() Org {
-	req, err := http.NewRequest(http.MethodGet, a.u.JoinPath(currentOrg).String(), nil)
+	req, err := common.Request(http.MethodGet, a.u, currentOrg, a.token, "", "", nil, nil)
 	if err != nil {
 	}
-	req.Header.Set("Authorization", "Bearer "+a.token)
 
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -107,4 +103,30 @@ func (a *api) GetCurrent() Org {
 
 	return org
 
+}
+
+func (a *api) Create(name string) error {
+	st := struct {
+		Name string `json:"name"`
+	}{name}
+	reqBodyBys, _ := json.Marshal(st)
+
+	req, err := common.Request(http.MethodPost, a.u, allOrgs, "", a.user, a.passwd, reqBodyBys, nil)
+	if err != nil {
+	}
+
+	resp, err := a.client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		var msg json.RawMessage
+		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
+			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL, "reqbody", string(reqBodyBys))
+		} else {
+			slog.Error("client.Do Failed", "err", err, "url", req.URL, "reqbody", string(reqBodyBys))
+		}
+		return fmt.Errorf("create org failed")
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("create org success")
+	return nil
 }

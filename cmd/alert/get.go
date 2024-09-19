@@ -62,14 +62,15 @@ var GetCmd = &cobra.Command{
 var (
 	outputfile string
 	file       string
-
-
 )
 
 func init() {
 	GetCmd.Flags().StringVarP(&outputfile, "output", "o", "", "output file")
-	GetCmd.Flags().Bool("ignore.id", false, "ignore id")   // remove id
-	GetCmd.Flags().Bool("ignore.uid", false, "ignore uid") // remove uid
 
+	GetCmd.Flags().Bool("remove.id", false, "ignore id")   // remove id
+	GetCmd.Flags().Bool("remove.uid", false, "ignore uid") // remove uid
+	GetCmd.Flags().String("replace.orgid", "", "replace orgid")
+	GetCmd.Flags().String("replace.folderid", "", "replace folderid")
+	GetCmd.Flags().String("replace.group", "", "replace group")
 
 }

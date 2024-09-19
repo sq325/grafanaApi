@@ -15,7 +15,8 @@ import (
 var CreateCmd = &cobra.Command{
 	Use:   "create -f alerts.json",
 	Short: "create alerts from file",
-	Long:  `create alerts from file`,
+	Long: `create alerts from file.
+Alerts in files must has same org`,
 	Run: func(cmd *cobra.Command, args []string) {
 		f, err := os.Open(file)
 		if err != nil {
@@ -59,6 +60,7 @@ var CreateCmd = &cobra.Command{
 		// 3. 替换 folderid
 		// 4. 处理 rule gourp
 		// 5. 验证 alerttitle 是否唯一
+		// 6. X-Disable-Provenance
 	},
 }
 
@@ -86,6 +88,6 @@ func datasourcesFromAlert(alert *alertApi.ProvisionedAlertRule) ([]string, error
 
 func init() {
 	CreateCmd.Flags().StringVarP(&file, "file", "f", "", "alerts file with json format") // file require
-
+	CreateCmd.Flags().Bool("Provenance", false, "enable editing these alerts in the Grafana UI")
 	CreateCmd.MarkFlagRequired("file")
 }

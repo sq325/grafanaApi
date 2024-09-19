@@ -62,12 +62,11 @@ func (a *api) Create(alert *ProvisionedAlertRule, datasourceUid string) error {
 }
 
 func (a *api) GetAll() ProvisionedAlertRules {
-	req, err := http.NewRequest(http.MethodGet, a.u.JoinPath(apiAllAlertRules).String(), nil)
+	req, err := common.Request(http.MethodGet, a.u, apiAllAlertRules, a.token, "", "", nil, nil)
 	if err != nil {
 		slog.Error("new request failed", "err", err)
 		return nil
 	}
-	req.Header.Set("Authorization", "Bearer "+a.token)
 
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -99,12 +98,11 @@ func (a *api) Get(uids ...string) ProvisionedAlertRules {
 
 	alerts := make(ProvisionedAlertRules, 0, len(uids))
 	for _, uid := range uids {
-		req, err := http.NewRequest(http.MethodGet, a.u.JoinPath(strings.Replace(apiAlertRule, "{uid}", uid, 1)).String(), nil)
+		req, err := common.Request(http.MethodGet, a.u, strings.Replace(apiAlertRule, "{uid}", uid, 1), a.token, "", "", nil, nil)
 		if err != nil {
 			slog.Error("new request failed", "err", err)
 			return nil
 		}
-		req.Header.Set("Authorization", "Bearer "+a.token)
 
 		resp, err := a.client.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {

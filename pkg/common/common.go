@@ -1,7 +1,10 @@
 package common
 
 import (
+	"bytes"
 	"errors"
+	"io"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -21,6 +24,37 @@ func Url(ep string) (*url.URL, error) {
 		return nil, err
 	}
 	return u, nil
+}
+
+func Request(method string, u *url.URL, path string, token, user, passwd string, body []byte, header http.Header) (*http.Request, error) {
+	var bodyReader io.Reader
+	if body == nil {
+		bodyReader = nil
+	} else {
+		bodyReader = bytes.NewReader(body)
+	}
+	req, err := http.NewRequest(method, u.JoinPath(path).String(), bodyReader)
+	if err != nil {
+		return nil, err
+	}
+
+	if header != nil {
+		req.Header = header
+	}
+
+	// Bearer token
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+		return req, nil
+	}
+
+	// basic auth
+	if user != "" && passwd != "" {
+		req.SetBasicAuth(user, passwd)
+		return req, nil
+	}
+
+	return nil, errors.New("must provide token or user and passwd")
 }
 
 func Ep(cmd *cobra.Command) (ip, port, token string, errs error) {

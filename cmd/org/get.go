@@ -11,11 +11,6 @@ import (
 	"github.com/sq325/grafanaApi/pkg/common"
 )
 
-var (
-	user   string
-	passwd string
-)
-
 var GetCmd = &cobra.Command{
 	Use:   "get [all]",
 	Short: "get org from grafana",
@@ -27,6 +22,17 @@ Get all need user and passwd permission`,
 			slog.Error("get grafana endpoint failed", "err", err)
 			return
 		}
+		user, err := cmd.Flags().GetString("http.user")
+		if err != nil {
+			slog.Error("get http user failed", "err", err)
+			return
+		}
+		passwd, err := cmd.Flags().GetString("http.passwd")
+		if err != nil {
+			slog.Error("get http passwd failed", "err", err)
+			return
+		}
+
 		api := orgApi.NewApi(ip+":"+port, token, user, passwd)
 		if api == nil {
 			slog.Error("new org api failed")
@@ -62,9 +68,4 @@ Get all need user and passwd permission`,
 		}
 
 	},
-}
-
-func init() {
-	GetCmd.Flags().StringVar(&user, "http.user", "", "user")
-	GetCmd.Flags().StringVar(&passwd, "http.passwd", "", "passwd")
 }
