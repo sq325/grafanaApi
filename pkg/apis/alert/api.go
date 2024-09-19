@@ -2,7 +2,7 @@ package alert
 
 import (
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -41,9 +41,10 @@ type api struct {
 
 // ep: ip:port
 func NewApi(ep, token string) API {
-
 	u, err := common.Url(ep)
 	if err != nil {
+		slog.Error("url parse failed", "err", err, "ep", ep, "token", token)
+		return nil
 	}
 
 	return &api{
@@ -63,23 +64,26 @@ func (a *api) Create(alert *ProvisionedAlertRule, datasourceUid string) error {
 func (a *api) GetAll() ProvisionedAlertRules {
 	req, err := http.NewRequest(http.MethodGet, a.u.JoinPath(apiAllAlertRules).String(), nil)
 	if err != nil {
-		fmt.Println("new request err:", err)
+		slog.Error("new request failed", "err", err)
 		return nil
 	}
+	req.Header.Set("Authorization", "Bearer "+a.token)
 
 	resp, err := a.client.Do(req)
-	if err != nil {
-		var msg any
+	if err != nil || resp.StatusCode != http.StatusOK {
+		var msg json.RawMessage
 		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			fmt.Printf("decode response body err:%s message:%s\n", err, msg)
-			return nil
+			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
+		} else {
+			slog.Error("client.Do Failed", "err", err, "url", req.URL)
 		}
+		return nil
 	}
 	defer resp.Body.Close()
 
 	var alerts ProvisionedAlertRules
 	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		fmt.Println("decode response body err:", err)
+		slog.Error("decode response body to alerts failed", "err", err, "url", req.URL)
 		return nil
 	}
 
@@ -87,8 +91,9 @@ func (a *api) GetAll() ProvisionedAlertRules {
 }
 
 func (a *api) Get(uids ...string) ProvisionedAlertRules {
+
 	if len(uids) == 0 {
-		fmt.Println("no alert uid")
+		slog.Info("no alert uid")
 		return nil
 	}
 
@@ -96,15 +101,16 @@ func (a *api) Get(uids ...string) ProvisionedAlertRules {
 	for _, uid := range uids {
 		req, err := http.NewRequest(http.MethodGet, a.u.JoinPath(strings.Replace(apiAlertRule, "{uid}", uid, 1)).String(), nil)
 		if err != nil {
-			fmt.Println("new request err:", err)
+			slog.Error("new request failed", "err", err)
 			return nil
 		}
+		req.Header.Set("Authorization", "Bearer "+a.token)
 
 		resp, err := a.client.Do(req)
-		if err != nil {
+		if err != nil || resp.StatusCode != http.StatusOK {
 			var msg any
 			if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-				fmt.Printf("decode response body err:%s message:%s\n", err, msg)
+				slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
 				return nil
 			}
 		}
@@ -112,7 +118,7 @@ func (a *api) Get(uids ...string) ProvisionedAlertRules {
 
 		var alert ProvisionedAlertRule
 		if err := json.NewDecoder(resp.Body).Decode(&alert); err != nil {
-			fmt.Println("decode response body err:", err)
+			slog.Error("decode response body to alert failed", "err", err, "url", req.URL)
 			return nil
 		}
 

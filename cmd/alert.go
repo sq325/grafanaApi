@@ -14,8 +14,17 @@ var AlertCmd = &cobra.Command{
 	},
 }
 
+var (
+	orgId     string
+	folderUid string
+	group     string
+)
+
 func init() {
 	RootCmd.AddCommand(AlertCmd)
 	AlertCmd.AddCommand(alertcmd.GetCmd)
 
+	AlertCmd.PersistentFlags().StringVar(&orgId, "orgid", "1", "org id")
+	AlertCmd.PersistentFlags().StringVar(&folderUid, "folderuid", "", "folder id")
+	AlertCmd.PersistentFlags().StringVar(&group, "group", "", "rule group")
 }

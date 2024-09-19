@@ -3,57 +3,13 @@ package alert
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"slices"
 
 	"github.com/spf13/cobra"
 	alertApi "github.com/sq325/grafanaApi/pkg/apis/alert"
-	"github.com/sq325/grafanaApi/pkg/common"
 )
-
-var GetCmd = &cobra.Command{
-	Use:   "get [-o alerts.json] [alertUid...]",
-	Short: "get alert",
-	Long:  `Get alerts from grafana. If alertUid is empty, get all alerts. Support multiple alertUid`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ip, port, token, err := common.Ep(cmd)
-		if err != nil {
-			fmt.Println("get grafana endpoint err:", err)
-			return
-		}
-		api := alertApi.NewApi(ip+":"+port, token)
-
-		var alerts alertApi.ProvisionedAlertRules
-		if len(args) == 0 {
-			alerts = api.GetAll()
-		} else {
-			alerts = api.Get(args...)
-		}
-
-		if len(alerts) == 0 {
-			fmt.Println("no alerts found")
-			return
-		}
-
-		jsonBys, err := json.MarshalIndent(alerts, "", "  ")
-		if err != nil {
-			fmt.Println("marshal alerts err:", err)
-			return
-		}
-
-		if outputfile != "" {
-			f, err := os.Create(outputfile)
-			if err != nil {
-				fmt.Printf("create output%s file err:%s\n", outputfile, err)
-				return
-			}
-			defer f.Close()
-			f.Write(jsonBys)
-			return
-		}
-		fmt.Println(string(jsonBys))
-	},
-}
 
 // create a alert 的前置条件是datasource已经存在
 var CreateCmd = &cobra.Command{
@@ -63,19 +19,19 @@ var CreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		f, err := os.Open(file)
 		if err != nil {
-			fmt.Printf("open file:%s err:%s\n", file, err)
+			slog.Error("open file failed", "file", file, "err", err)
 			return
 		}
 
 		var alerts alertApi.ProvisionedAlertRules
 		err = json.NewDecoder(f).Decode(&alerts)
 		if err != nil {
-			fmt.Printf("decode file:%s err:%s\n", file, err)
+			slog.Error("decode file to alerts failed", "file", file, "err", err)
 			return
 		}
 
 		if len(alerts) == 0 {
-			fmt.Println("no alerts found in", file)
+			slog.Info("no alerts found", "file", file)
 			return
 		}
 
@@ -96,6 +52,13 @@ var CreateCmd = &cobra.Command{
 
 		// TODO:
 		// 1. 如果 datasource 不存在，创建datasource
+
+		// TODO:
+		// 1. 剔除id uid
+		// 2. 替换 orgid
+		// 3. 替换 folderid
+		// 4. 处理 rule gourp
+		// 5. 验证 alerttitle 是否唯一
 	},
 }
 
@@ -121,18 +84,8 @@ func datasourcesFromAlert(alert *alertApi.ProvisionedAlertRule) ([]string, error
 	return uids, nil
 }
 
-// flag
-var (
-	outputfile string
-	file       string
-)
-
 func init() {
-	GetCmd.Flags().StringVarP(&outputfile, "output", "o", "", "output file")
-	GetCmd.Flags().Bool("ignore.id", false, "ignore id")   // remove id
-	GetCmd.Flags().Bool("ignore.uid", false, "ignore uid") // remove uid
-
 	CreateCmd.Flags().StringVarP(&file, "file", "f", "", "alerts file with json format") // file require
-	CreateCmd.MarkFlagRequired("file")
 
+	CreateCmd.MarkFlagRequired("file")
 }
