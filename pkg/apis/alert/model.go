@@ -24,7 +24,7 @@ type ProvisionedAlertRule struct {
 	// minLength: 1
 	// maxLength: 190
 	// example: eval_group_1
-	RuleGroup string `json:"ruleGroup"` // replace
+	RuleGroup string `json:"ruleGroup"` // not change
 	// required: true
 	// minLength: 1
 	// maxLength: 190
