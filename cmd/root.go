@@ -27,6 +27,15 @@ var RootCmd = &cobra.Command{
 			fmt.Println("author:", author)
 			fmt.Println("version info:", _versionInfo)
 		}
+
+		// remove completion command
+		for i, subcmd := range cmd.Commands() {
+			if subcmd.Use == "completion" {
+				cmd.RemoveCommand(cmd.Commands()[i])
+				break
+			}
+		}
+
 		cmd.Help()
 	},
 }

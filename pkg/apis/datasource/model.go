@@ -25,4 +25,35 @@ type DataSource struct {
 type DsAccess string
 type Metadata map[string]bool
 
-type DataSources []*DataSource
+type DataSources []DataSource
+
+type datesourceType struct{}
+
+func (dt datesourceType) Type(name string) string {
+	switch name {
+	case mysql:
+		return mysql
+	case elasticsearch:
+		return elasticsearch
+	case graphite:
+		return graphite
+	case prometheus:
+		return prometheus
+	case alertmanager:
+		return alertmanager
+	case jaeger:
+		return jaeger
+	default:
+		return ""
+	}
+}
+
+// datasource type
+const (
+	mysql         = "mysql"
+	elasticsearch = "elasticsearch"
+	graphite      = "graphite"
+	prometheus    = "prometheus"
+	alertmanager  = "alertmanager"
+	jaeger        = "jaeger"
+)

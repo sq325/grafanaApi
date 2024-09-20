@@ -23,6 +23,7 @@ Alerts in files must has same org`,
 			slog.Error("open file failed", "file", file, "err", err)
 			return
 		}
+		defer f.Close()
 
 		var alerts alertApi.ProvisionedAlertRules
 		err = json.NewDecoder(f).Decode(&alerts)

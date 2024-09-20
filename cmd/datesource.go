@@ -17,4 +17,5 @@ var DatasourceCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(DatasourceCmd)
 	DatasourceCmd.AddCommand(datasource.GetCmd)
+	DatasourceCmd.AddCommand(datasource.CreateCmd)
 }
