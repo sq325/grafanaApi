@@ -32,6 +32,7 @@ type api struct {
 	client *http.Client
 }
 
+// ep: ip:port
 func NewApi(ep, token string) API {
 	u, err := common.Url(ep)
 	if err != nil {

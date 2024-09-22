@@ -2,10 +2,8 @@ package alert
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
-	"slices"
 
 	"github.com/spf13/cobra"
 	alertApi "github.com/sq325/grafanaApi/pkg/apis/alert"
@@ -38,19 +36,19 @@ Alerts in files must has same org`,
 		}
 
 		// TODO: check datasource exist
-		dsUids := make([]string, 0, 1)
-		for _, alert := range alerts {
-			dss, err := datasourcesFromAlert(&alert)
-			if err != nil {
-			}
-			if len(dss) > 0 {
-				for _, ds := range dss {
-					if !slices.Contains(dsUids, ds) {
-						dsUids = append(dsUids, ds)
-					}
-				}
-			}
-		}
+		// dsUids := make([]string, 0, 1)
+		// for _, alert := range alerts {
+		// 	dss, err := datasourcesFromAlert(&alert)
+		// 	if err != nil {
+		// 	}
+		// 	if len(dss) > 0 {
+		// 		for _, ds := range dss {
+		// 			if !slices.Contains(dsUids, ds) {
+		// 				dsUids = append(dsUids, ds)
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		// TODO:
 		// 1. 如果 datasource 不存在，创建datasource
@@ -71,24 +69,20 @@ Alerts in files must has same org`,
 // 	Type string `json:"type"`
 // }
 
-func datasourcesFromAlert(alert *alertApi.ProvisionedAlertRule) ([]string, error) {
-	uids := make([]string, 0, 1)
-	for _, d := range alert.Data {
-		if d.DatasourceUID != "__expr__" {
-			if len(uids) > 0 && !slices.Contains(uids, d.DatasourceUID) {
-				uids = append(uids, d.DatasourceUID)
-			}
-		}
-	}
-
-	if len(uids) == 0 {
-		return nil, fmt.Errorf("no datasource found in alert")
-	}
-	return uids, nil
-}
-
 func init() {
 	CreateCmd.Flags().StringVarP(&file, "file", "f", "", "alerts file with json format") // file require
-	CreateCmd.Flags().Bool("Provenance", false, "enable editing these alerts in the Grafana UI")
 	CreateCmd.MarkFlagRequired("file")
+	CreateCmd.Flags().Bool("Provenance", false, "enable editing these alerts in the Grafana UI")
+
+	// replace: source -> target
+	CreateCmd.Flags().String("source.orgid", "", "source org id")
+	CreateCmd.Flags().String("source.folderuid", "", "source folder uid")
+	CreateCmd.Flags().String("source.group", "", "source group")
+	CreateCmd.Flags().String("target.orgid", "", "target org id")
+	CreateCmd.Flags().String("target.folderuid", "", "target folder uid")
+	CreateCmd.Flags().String("target.group", "", "target group")
+
+	// datasource
+	CreateCmd.Flags().String("source.datasourceuid", "", "datasource uid")
+
 }

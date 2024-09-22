@@ -28,15 +28,10 @@ var RootCmd = &cobra.Command{
 			fmt.Println("version info:", _versionInfo)
 		}
 
-		// remove completion command
-		for i, subcmd := range cmd.Commands() {
-			if subcmd.Use == "completion" {
-				cmd.RemoveCommand(cmd.Commands()[i])
-				break
-			}
-		}
-
 		cmd.Help()
+	},
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
 	},
 }
 
@@ -58,4 +53,11 @@ func init() {
 	// RootCmd.MarkFlagRequired("http.token")
 
 	RootCmd.Flags().BoolVarP(&version, "version", "v", false, "show version")
+
+	// remove help command
+	RootCmd.SetHelpCommand(&cobra.Command{
+		Use:    "no-help",
+		Hidden: true,
+	})
+
 }

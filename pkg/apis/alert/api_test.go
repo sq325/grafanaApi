@@ -14,3 +14,5 @@ func TestUrl(t *testing.T) {
 	t.Logf("url: %+v", u)
 	fmt.Println(u.JoinPath(apiAllAlertRules))
 }
+
+
