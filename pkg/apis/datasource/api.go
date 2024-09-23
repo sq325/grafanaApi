@@ -13,10 +13,9 @@ import (
 
 type API interface {
 	GetAll() DataSources
-	Get(uid string) DataSource
-	// Create(name, datasourceType, url, access string, basicAuth bool) // token only
+	Get(uids ...string) DataSources
 	Create(DataSource) error
-	CreateFromArgs(name, datasourceType, url, access string, basicAuth bool) error
+	CreateFromArgs(name string, datasourceType DatesourceType, url, access string, basicAuth bool) error
 }
 
 const (
@@ -74,35 +73,19 @@ func (a *api) GetAll() DataSources {
 	return datasources
 }
 
-func (a *api) CreateFromArgs(name, datasourceType, url, access string, basicAuth bool) error {
-	datasource := &DataSource{
+func (a *api) CreateFromArgs(name string, datasourceType DatesourceType, url, access string, basicAuth bool) error {
+	datasource := DataSource{
 		Name:      name,
 		Type:      datasourceType,
 		Url:       url,
 		Access:    DsAccess(access),
 		BasicAuth: basicAuth,
 	}
-	body, err := json.Marshal(datasource)
+	err := a.Create(datasource)
 	if err != nil {
-		return err
+		slog.Error("create datasource failed", "err", err, "datasource", datasource)
 	}
-	req, err := common.Request(http.MethodPost, a.u, apiAllDatasources, a.token, "", "", body, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := a.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
-			slog.Error("client.Do Failed", "err", err, "url", req.URL)
-		}
-		return err
-	}
-	defer resp.Body.Close()
-	return nil
+	return err
 }
 
 func (a *api) Create(ds DataSource) error {
@@ -129,30 +112,39 @@ func (a *api) Create(ds DataSource) error {
 	return nil
 }
 
-func (a *api) Get(uid string) DataSource {
-	req, err := common.Request(http.MethodGet, a.u, strings.Replace(apiDatasource, "{uid}", uid, 1), a.token, "", "", nil, nil)
-	if err != nil {
-		slog.Error("new request failed", "err", err)
-		return DataSource{}
+func (a *api) Get(uids ...string) DataSources {
+	if len(uids) == 0 {
+		slog.Error("uids must not be empty")
+		return nil
 	}
 
-	resp, err := a.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
-			slog.Error("client.Do Failed", "err", err, "url", req.URL)
+	datasources := make(DataSources, 0, len(uids))
+	for _, uid := range uids {
+		req, err := common.Request(http.MethodGet, a.u, strings.Replace(apiDatasource, "{uid}", uid, 1), a.token, "", "", nil, nil)
+		if err != nil {
+			slog.Error("new request failed", "err", err)
+			continue
 		}
-		return DataSource{}
-	}
-	defer resp.Body.Close()
 
-	var datasource DataSource
-	if err := json.NewDecoder(resp.Body).Decode(&datasource); err != nil {
-		slog.Error("decode response body to datasource failed", "err", err, "url", req.URL)
-		return DataSource{}
+		resp, err := a.client.Do(req)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			var msg json.RawMessage
+			if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
+				slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
+			} else {
+				slog.Error("client.Do Failed", "err", err, "url", req.URL)
+			}
+			continue
+		}
+		defer resp.Body.Close()
+
+		var datasource DataSource
+		if err := json.NewDecoder(resp.Body).Decode(&datasource); err != nil {
+			slog.Error("decode response body to datasource failed", "err", err, "url", req.URL)
+			continue
+		}
+		datasources = append(datasources, datasource)
 	}
 
-	return datasource
+	return datasources
 }

@@ -7,14 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 	alertApi "github.com/sq325/grafanaApi/pkg/apis/alert"
+	"github.com/sq325/grafanaApi/pkg/common"
 )
 
 // create a alert 的前置条件是datasource已经存在
 var CreateCmd = &cobra.Command{
-	Use:   "create -f alerts.json",
+	Use:   "create -f alerts.json [--replace.orgid source:target] [--replace.folderuid source:target] [--replace.grouptitle source:target] [--replace.datasourceuid source:target]",
 	Short: "create alerts from file",
-	Long: `create alerts from file.
-Alerts in files must has same org`,
+	Long:  `create alerts from file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		f, err := os.Open(file)
 		if err != nil {
@@ -35,54 +35,55 @@ Alerts in files must has same org`,
 			return
 		}
 
-		// TODO: check datasource exist
-		// dsUids := make([]string, 0, 1)
-		// for _, alert := range alerts {
-		// 	dss, err := datasourcesFromAlert(&alert)
-		// 	if err != nil {
-		// 	}
-		// 	if len(dss) > 0 {
-		// 		for _, ds := range dss {
-		// 			if !slices.Contains(dsUids, ds) {
-		// 				dsUids = append(dsUids, ds)
-		// 			}
-		// 		}
-		// 	}
-		// }
+		ip, port, token, err := common.Ep(cmd)
+		if err != nil {
+			slog.Error("get grafana endpoint failed", "err", err)
+			return
+		}
+		api := alertApi.NewApi(ip+":"+port, token)
+		if api == nil {
+			slog.Error("create alert api failed", "ip", ip, "port", port, "token", token)
+			return
+		}
 
-		// TODO:
-		// 1. 如果 datasource 不存在，创建datasource
+		for _, alert := range alerts {
+			// TODO:
+			// 剔除id uid
 
-		// TODO:
-		// 1. 剔除id uid
-		// 2. 替换 orgid
-		// 3. 替换 folderid
-		// 4. 处理 rule gourp
-		// 5. 验证 alerttitle 是否唯一
-		// 6. X-Disable-Provenance
+			// 验证 alerttitle 是否唯一
+
+			// replace orgid
+
+			// replace folderuid, 验证存在，不存在创建
+
+			// replace grouptitle，验证存在，不存在创建
+
+			// replace datasourceuid, 验证存在
+
+			if err := api.Create(alert, provenance); err != nil {
+				return
+			}
+		}
 	},
 }
 
-// type datesource struct {
-// 	UID  string `json:"uid"`
-// 	Name string `json:"name"`
-// 	Type string `json:"type"`
-// }
+var (
+	replaceOrgIds         []string
+	replaceFolderUids     []string
+	replaceGroupTitles    []string
+	replaceDatasourceUids []string
+	provenance            bool
+)
 
 func init() {
 	CreateCmd.Flags().StringVarP(&file, "file", "f", "", "alerts file with json format") // file require
 	CreateCmd.MarkFlagRequired("file")
-	CreateCmd.Flags().Bool("Provenance", false, "enable editing these alerts in the Grafana UI")
+	CreateCmd.Flags().BoolVar(&provenance, "provenance", false, "enable editing these alerts in the Grafana UI")
 
 	// replace: source -> target
-	CreateCmd.Flags().String("source.orgid", "", "source org id")
-	CreateCmd.Flags().String("source.folderuid", "", "source folder uid")
-	CreateCmd.Flags().String("source.group", "", "source group")
-	CreateCmd.Flags().String("target.orgid", "", "target org id")
-	CreateCmd.Flags().String("target.folderuid", "", "target folder uid")
-	CreateCmd.Flags().String("target.group", "", "target group")
-
-	// datasource
-	CreateCmd.Flags().String("source.datasourceuid", "", "datasource uid")
+	CreateCmd.Flags().StringSliceVar(&replaceOrgIds, "replace.orgid", nil, "source:target org id")
+	CreateCmd.Flags().StringSliceVar(&replaceFolderUids, "replace.folderuid", nil, "source:target folder uid")
+	CreateCmd.Flags().StringSliceVar(&replaceGroupTitles, "replace.grouptitle", nil, "source:target group title")
+	CreateCmd.Flags().StringSliceVar(&replaceDatasourceUids, "replace.datasourceuid", nil, "source:target datasource uid")
 
 }

@@ -73,7 +73,7 @@ var CreateCmd = &cobra.Command{
 		case name != "" && _type != "" && _url != "" && access != "":
 			ds := datasource.DataSource{
 				Name:   name,
-				Type:   _type,
+				Type:   datasource.GetDSType(_type),
 				Url:    _url,
 				Access: datasource.DsAccess(access),
 			}

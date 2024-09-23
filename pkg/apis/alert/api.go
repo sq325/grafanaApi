@@ -13,7 +13,8 @@ import (
 
 // crud
 type API interface {
-	Create(alert *ProvisionedAlertRule, datasourceUid string) error
+	// provenance Header:X-Disable-Provenance
+	Create(alert ProvisionedAlertRule, provenance bool) error
 	GetAll() ProvisionedAlertRules
 	Get(uids ...string) ProvisionedAlertRules
 	Update(uid string, alert *ProvisionedAlertRule) error
@@ -56,8 +57,8 @@ func NewApi(ep, token string) API {
 
 var _ API = (*api)(nil)
 
-func (a *api) Create(alert *ProvisionedAlertRule, datasourceUid string) error {
-
+func (a *api) Create(alert ProvisionedAlertRule, Provenance bool) error {
+	
 	return nil
 }
 
