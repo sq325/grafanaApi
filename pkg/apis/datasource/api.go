@@ -53,7 +53,7 @@ func (a *api) GetAll() DataSources {
 	}
 
 	resp, err := a.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode >= 400 {
 		var msg json.RawMessage
 		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
@@ -98,7 +98,7 @@ func (a *api) Create(ds DataSource) error {
 	}
 
 	resp, err := a.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode >= 400 {
 		var msg json.RawMessage
 		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
@@ -127,7 +127,7 @@ func (a *api) Get(uids ...string) DataSources {
 		}
 
 		resp, err := a.client.Do(req)
-		if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil || resp.StatusCode >= 400 {
 			var msg json.RawMessage
 			if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 				slog.Error("client.Do Failed", "err", err, "url", req.URL)

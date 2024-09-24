@@ -19,7 +19,7 @@ type API interface {
 	Create(alert ProvisionedAlertRule, provenance bool) error
 	GetAll() ProvisionedAlertRules
 	Get(uids ...string) ProvisionedAlertRules
-	Update(uid string, alert *ProvisionedAlertRule) error
+	Update(uid string, alert ProvisionedAlertRule) error
 	Delete(uids ...string) error
 }
 
@@ -60,7 +60,6 @@ func NewApi(ep, token string) API {
 var _ API = (*api)(nil)
 
 func (a *api) Create(alert ProvisionedAlertRule, Provenance bool) error {
-	// TODO:
 	body, err := json.Marshal(alert)
 	if err != nil {
 		slog.Error("marshal alert failed", "err", err)
@@ -76,7 +75,7 @@ func (a *api) Create(alert ProvisionedAlertRule, Provenance bool) error {
 	}
 
 	resp, err := a.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode >= 400 {
 		var msg json.RawMessage
 		alertBys, _ := json.Marshal(alert)
 		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
@@ -85,7 +84,7 @@ func (a *api) Create(alert ProvisionedAlertRule, Provenance bool) error {
 			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL, "respCode", resp.StatusCode, "alert", string(alertBys))
 		}
 		if err == nil {
-			return errors.New("respCode is not 200, code=" + strconv.Itoa(resp.StatusCode))
+			return errors.New("respCode is larger than 400, code=" + strconv.Itoa(resp.StatusCode))
 		}
 		return err
 	}
@@ -101,7 +100,7 @@ func (a *api) GetAll() ProvisionedAlertRules {
 	}
 
 	resp, err := a.client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode >= 400 {
 		var msg json.RawMessage
 		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
@@ -136,7 +135,7 @@ func (a *api) Get(uids ...string) ProvisionedAlertRules {
 		}
 
 		resp, err := a.client.Do(req)
-		if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil || resp.StatusCode >= 400 {
 			var msg json.RawMessage
 			if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 				slog.Error("client.Do Failed", "err", err, "url", req.URL)
@@ -158,10 +157,12 @@ func (a *api) Get(uids ...string) ProvisionedAlertRules {
 	return alerts
 }
 
-func (a *api) Update(uid string, alert *ProvisionedAlertRule) error {
+func (a *api) Update(uid string, alert ProvisionedAlertRule) error {
+	// TODO
 	return nil
 }
 
 func (a *api) Delete(uids ...string) error {
+	// TODO
 	return nil
 }

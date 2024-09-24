@@ -21,4 +21,4 @@ type Folder struct {
 	Version   int       `json:"version,omitempty"`
 }
 
-type Folders []*Folder
+type Folders []Folder

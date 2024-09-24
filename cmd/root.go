@@ -26,6 +26,7 @@ var RootCmd = &cobra.Command{
 			fmt.Println("go version:", buildGoVersion)
 			fmt.Println("author:", author)
 			fmt.Println("version info:", _versionInfo)
+			return
 		}
 
 		cmd.Help()

@@ -49,7 +49,6 @@ var CreateCmd = &cobra.Command{
 		}
 
 		for _, alert := range alerts {
-			// TODO:
 			// 剔除id uid
 			alert.ID = 0
 			alert.UID = ""
@@ -63,7 +62,7 @@ var CreateCmd = &cobra.Command{
 					orgids := strings.Split(orgid, ":")
 					if len(orgids) != 2 {
 						slog.Error("replace.orgid format error", "replace.orgid", orgid)
-						return
+						continue
 					}
 					source, err := strconv.Atoi(orgids[0])
 					if err != nil {
@@ -97,6 +96,7 @@ var CreateCmd = &cobra.Command{
 						break
 					}
 				}
+
 				// TODO: 创建folder
 			}
 
@@ -153,7 +153,7 @@ var CreateCmd = &cobra.Command{
 
 			if err := api.Create(alert, provenance); err != nil {
 				slog.Error("create alert failed", "alert", alert, "err", err)
-				return
+				continue
 			}
 			slog.Info("create alert success", "alert", alert.Title)
 		}

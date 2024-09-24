@@ -18,7 +18,7 @@ darwin:
 	@CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o $(projectName)
 
 linux:
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o 
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(projectName)
 
 vendor-build:
 	go mod tidy && go mod vendor
