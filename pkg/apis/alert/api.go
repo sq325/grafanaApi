@@ -2,9 +2,11 @@ package alert
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/sq325/grafanaApi/pkg/common"
@@ -58,7 +60,36 @@ func NewApi(ep, token string) API {
 var _ API = (*api)(nil)
 
 func (a *api) Create(alert ProvisionedAlertRule, Provenance bool) error {
-	
+	// TODO:
+	body, err := json.Marshal(alert)
+	if err != nil {
+		slog.Error("marshal alert failed", "err", err)
+		return err
+	}
+	req, err := common.Request(http.MethodPost, a.u, apiAllAlertRules, a.token, "", "", body, nil)
+	if err != nil {
+		slog.Error("new request failed", "err", err)
+		return err
+	}
+	if Provenance {
+		req.Header.Set("X-Disable-Provenance", "true")
+	}
+
+	resp, err := a.client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		var msg json.RawMessage
+		alertBys, _ := json.Marshal(alert)
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
+			slog.Error("client.Do Failed", "err", err, "url", req.URL, "respCode", resp.StatusCode, "alert", string(alertBys))
+		} else {
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL, "respCode", resp.StatusCode, "alert", string(alertBys))
+		}
+		if err == nil {
+			return errors.New("respCode is not 200, code=" + strconv.Itoa(resp.StatusCode))
+		}
+		return err
+	}
+	defer resp.Body.Close()
 	return nil
 }
 
@@ -72,12 +103,11 @@ func (a *api) GetAll() ProvisionedAlertRules {
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
+		} else {
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 		}
-		return nil
 	}
 	defer resp.Body.Close()
 
@@ -107,10 +137,11 @@ func (a *api) Get(uids ...string) ProvisionedAlertRules {
 
 		resp, err := a.client.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {
-			var msg any
-			if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-				slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-				return nil
+			var msg json.RawMessage
+			if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
+				slog.Error("client.Do Failed", "err", err, "url", req.URL)
+			} else {
+				slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 			}
 		}
 		defer resp.Body.Close()

@@ -42,19 +42,22 @@ func Request(method string, u *url.URL, path string, token, user, passwd string,
 		req.Header = header
 	}
 
+	// Content-Type
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
 	// Bearer token
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
-		return req, nil
 	}
 
 	// basic auth
 	if user != "" && passwd != "" {
 		req.SetBasicAuth(user, passwd)
-		return req, nil
 	}
 
-	return nil, errors.New("must provide token or user and passwd")
+	return req, nil
 }
 
 func Ep(cmd *cobra.Command) (ip, port, token string, errs error) {

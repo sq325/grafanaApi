@@ -14,9 +14,8 @@ var AlertCmd = &cobra.Command{
 	},
 }
 
-
 func init() {
 	RootCmd.AddCommand(AlertCmd)
 	AlertCmd.AddCommand(alertcmd.GetCmd)
-
+	AlertCmd.AddCommand(alertcmd.CreateCmd)
 }

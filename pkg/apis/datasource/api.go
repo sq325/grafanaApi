@@ -55,12 +55,11 @@ func (a *api) GetAll() DataSources {
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
+		} else {
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 		}
-		return nil
 	}
 	defer resp.Body.Close()
 
@@ -101,12 +100,13 @@ func (a *api) Create(ds DataSource) error {
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
+			return err
+		} else {
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
+			return err
 		}
-		return err
 	}
 	defer resp.Body.Close()
 	return nil
@@ -129,12 +129,11 @@ func (a *api) Get(uids ...string) DataSources {
 		resp, err := a.client.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {
 			var msg json.RawMessage
-			if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-				slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-			} else {
+			if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 				slog.Error("client.Do Failed", "err", err, "url", req.URL)
+			} else {
+				slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 			}
-			continue
 		}
 		defer resp.Body.Close()
 

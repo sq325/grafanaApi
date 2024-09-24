@@ -60,12 +60,11 @@ func (a *api) GetAll() Orgs {
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
+		} else {
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 		}
-		return nil
 	}
 	defer resp.Body.Close()
 
@@ -86,12 +85,11 @@ func (a *api) GetCurrent() Org {
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL)
-		} else {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
 			slog.Error("client.Do Failed", "err", err, "url", req.URL)
+		} else {
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 		}
-		return Org{}
 	}
 	defer resp.Body.Close()
 
@@ -118,12 +116,11 @@ func (a *api) Create(name string) error {
 	resp, err := a.client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		var msg json.RawMessage
-		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-			slog.Error("client.Do Failed", "err", err, "msg", msg, "url", req.URL, "reqbody", string(reqBodyBys))
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&msg); decodeErr != nil {
+			slog.Error("client.Do Failed", "err", err, "url", req.URL)
 		} else {
-			slog.Error("client.Do Failed", "err", err, "url", req.URL, "reqbody", string(reqBodyBys))
+			slog.Error("client.Do Failed", "err", err, "msg", string(msg), "url", req.URL)
 		}
-		return fmt.Errorf("create org failed")
 	}
 	defer resp.Body.Close()
 
